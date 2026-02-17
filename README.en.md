@@ -81,7 +81,7 @@ EMAIL_CONFIG = {
 | QQ Mail | smtp.qq.com | 587 | [Official Doc](https://service.mail.qq.com/cgi-bin/help?subtype=1&id=28&no=1001256) |
 | Gmail | smtp.gmail.com | 587 | [Google Support](https://support.google.com/accounts/answer/185833) |
 | 163 Mail | smtp.163.com | 25/465 | [Official Help](https://help.mail.163.com/index.do) |
-| Outlook | smtp.office365.com | 587 | [Microsoft Support](https://support.microsoft.com/en-us/account-billing/how-to-get-a-app-password-in-microsoft-account-ff0e6c71-5aa8-4f36-8d6f-19aa9041d2e3) |
+| Outlook | smtp.office365.com | 587 | [Microsoft Support](https://support.microsoft.com/zh-cn/office/outlook-com-%E7%9A%84-pop-imap-%E5%92%8C-smtp-%E8%AE%BE%E7%BD%AE-d088b986-291d-42b8-9564-9c414e2aa040) |
 
 ### 4. Run
 
