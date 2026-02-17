@@ -2,7 +2,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
+[OpenClaw](https://github.com/openclaw/openclaw)
 > 🔔 追踪 B站 UP 主的视频更新，当有新视频发布时收到邮件通知
 
 [English](README.en.md) | 简体中文
