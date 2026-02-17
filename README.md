@@ -85,7 +85,7 @@ EMAIL_CONFIG = {
 |------------|-------------|------|----------------|
 | QQ 邮箱 | smtp.qq.com | 587 | [官方文档](https://service.mail.qq.com/cgi-bin/help?subtype=1&id=28&no=1001256) |
 | Gmail | smtp.gmail.com | 587 | [Google 支持](https://support.google.com/accounts/answer/185833) |
-| 163 邮箱 | smtp.163.com | 25/465 | [官方帮助](https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b12f4f2748598) |
+| 163 邮箱 | smtp.163.com | 25/465 | [官方帮助](https://help.mail.163.com/index.do) |
 | Outlook | smtp.office365.com | 587 | [Microsoft 支持](https://support.microsoft.com/zh-cn/account-billing/如何在-microsoft-帐户中获取应用密码-ff0e6c71-5aa8-4f36-8d6f-19aa9041d2e3) |
 
 **配置多个接收邮箱：**
