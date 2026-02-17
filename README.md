@@ -5,7 +5,7 @@
 
 > 🔔 追踪 B站 UP 主的视频更新，当有新视频发布时收到邮件通知
 
-[English](README.md) | 简体中文
+[English](README.en.md) | 简体中文
 
 ## ✨ 功能特性
 
