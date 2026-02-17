@@ -109,6 +109,7 @@ python monitor.py
 - ✅ Linux - 完整支持（直接运行 + cron 定时）
 - ✅ macOS - 完整支持（直接运行 + cron 定时）  
 - ✅ Windows - 支持直接运行（定时任务需自行配置）
+- ✅[OpenClaw](https://github.com/openclaw/openclaw) 是一个 AI 自动化平台，可以托管运行此脚本，无需维护服务器。
 
 ## 📧 邮件通知示例
 
