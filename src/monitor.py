@@ -24,8 +24,8 @@ except ImportError:
 # 尝试导入 bilibili_api
 try:
     from bilibili_api import user
-except ImportError:
-    print("bilibili_api 未安装，正在安装...")
+except ImportError as e:
+    print(f"bilibili_api 未安装，正在安装...（原因: {e}）")
     import subprocess
     subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "bilibili-api-python", "aiohttp"])
     from bilibili_api import user
