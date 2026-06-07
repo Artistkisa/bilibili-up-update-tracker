@@ -21,14 +21,12 @@ except ImportError:
     print("错误：无法导入配置，请检查 src/config.py 是否存在")
     sys.exit(1)
 
-# 尝试导入 bilibili_api
+# 导入 bilibili_api
 try:
     from bilibili_api import user
 except ImportError:
-    print("bilibili_api 未安装，正在安装...")
-    import subprocess
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "bilibili-api-python", "aiohttp"])
-    from bilibili_api import user
+    print("错误：bilibili-api-python 未安装，请运行: pip install bilibili-api-python aiohttp")
+    sys.exit(1)
 
 
 def load_data():
