@@ -119,7 +119,7 @@ def format_email(updates, all_results):
             f"   🔗 {v['link']}",
             f"   🕐 发布时间：{format_time(v['created'])}",
             f"   ⏱️ 时长：{v['length']}",
-            f"   👁️ 播放量：v['play']}",
+            f"   👁️ 播放量：{v['play']}",
             ""
         ])
     
