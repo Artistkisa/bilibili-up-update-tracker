@@ -36,6 +36,11 @@ class NotifierTests(unittest.TestCase):
             },
         }
 
+    def test_play_count_uses_readable_chinese_units(self):
+        self.assertEqual(notifiers.format_play_count(1_250_000), "125万")
+        self.assertEqual(notifiers.format_play_count(890_000), "89万")
+        self.assertEqual(notifiers.format_play_count(123), "123")
+
     @patch("notifiers.urlopen")
     def test_webhook_posts_expected_json_and_headers(self, mocked_urlopen):
         response = MagicMock()

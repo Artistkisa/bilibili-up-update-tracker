@@ -19,18 +19,34 @@ def format_time(timestamp):
         return str(timestamp)
 
 
+def format_play_count(value):
+    try:
+        count = int(value)
+    except (TypeError, ValueError):
+        return str(value) if value is not None else "未知"
+    if count >= 100_000_000:
+        amount = count / 100_000_000
+        return f"{amount:g}亿"
+    if count >= 10_000:
+        amount = count / 10_000
+        return f"{amount:g}万"
+    return str(count)
+
+
 def format_message(updates, all_results, total_up):
     lines = [
         "📺 B站 UP 主更新汇总", "=" * 35, "",
         f"📅 检查时间：{datetime.now().astimezone().strftime('%Y-%m-%d %H:%M:%S %Z')}",
         f"📊 本次更新：{len(updates)} 个", f"👥 监控 UP 主：{total_up} 个", "",
+        "=" * 35, "🎉 新视频列表", "=" * 35, "",
     ]
     for index, update in enumerate(updates, 1):
         video = update["video"]
         lines.extend([
             f"{index}. 【{update['name']}】", f"   📹 {video['title']}",
             f"   🔗 {video['link']}", f"   🕐 发布时间：{format_time(video['created'])}",
-            f"   ⏱️ 时长：{video['length']}", f"   👁️ 播放量：{video['play']}", "",
+            f"   ⏱️ 时长：{video['length']}",
+            f"   👁️ 播放量：{format_play_count(video['play'])}", "",
         ])
     failed = [item["name"] for item in all_results if not item.get("success")]
     if failed:
