@@ -81,6 +81,15 @@ class SettingsTests(unittest.TestCase):
         with self.assertRaisesRegex(settings.ConfigError, "missing: url, token"):
             settings.load_settings([], env=env)
 
+    def test_non_http_notification_url_is_rejected(self):
+        env = {
+            "UP_USERS_JSON": '[{"uid":1,"name":"test"}]',
+            "NOTIFY_CHANNELS": "webhook",
+            "WEBHOOK_URL": "file:///etc/passwd",
+        }
+        with self.assertRaisesRegex(settings.ConfigError, "absolute http"):
+            settings.load_settings([], env=env)
+
     def test_legacy_config_fallback_warns(self):
         legacy = type("Legacy", (), {
             "UP_LIST": {123: "legacy-user"},

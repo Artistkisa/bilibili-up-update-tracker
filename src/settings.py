@@ -6,6 +6,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -259,8 +260,12 @@ def validate(settings):
         raise ConfigError("notifications.webhook.headers must be a mapping")
     for channel in ("webhook", "gotify"):
         url = notifications[channel].get("url")
-        if notifications[channel].get("enabled") and not str(url).startswith(("http://", "https://")):
-            raise ConfigError(f"notifications.{channel}.url must start with http:// or https://")
+        if notifications[channel].get("enabled"):
+            parsed = urlsplit(str(url))
+            if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+                raise ConfigError(
+                    f"notifications.{channel}.url must be an absolute http:// or https:// URL"
+                )
     for channel in ("webhook", "gotify"):
         if int(notifications[channel].get("timeout", 10)) <= 0:
             raise ConfigError(f"notifications.{channel}.timeout must be greater than zero")

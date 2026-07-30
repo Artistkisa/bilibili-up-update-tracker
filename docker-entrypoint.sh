@@ -4,11 +4,21 @@ set -eu
 cron_expression=${CHECK_CRON:-"0 10 * * *"}
 timezone=${TZ:-Asia/Shanghai}
 
-field_count=$(printf '%s\n' "$cron_expression" | awk '{ print NF }')
-if [ "$field_count" -ne 5 ] || printf '%s' "$cron_expression" | grep -q '[\r\n]'; then
-    echo "Invalid CHECK_CRON: expected a five-field cron expression" >&2
-    exit 2
-fi
+CHECK_CRON="$cron_expression" python3 - <<'PY'
+import os
+import re
+import sys
+
+expression = os.environ["CHECK_CRON"]
+fields = expression.split()
+safe_field = re.compile(r"^[A-Za-z0-9*/,?\-]+$")
+if len(fields) != 5 or any(not safe_field.fullmatch(field) for field in fields):
+    print(
+        "Invalid CHECK_CRON: expected five cron fields containing only letters, digits, *, /, comma, ?, or -",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
+PY
 
 if [ ! -f "/usr/share/zoneinfo/$timezone" ]; then
     echo "Invalid TZ: timezone not found: $timezone" >&2

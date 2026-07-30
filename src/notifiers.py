@@ -6,6 +6,7 @@ from datetime import datetime
 from email.header import Header
 from email.mime.text import MIMEText
 from urllib.parse import urlencode
+from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 
@@ -66,6 +67,9 @@ def send_email(config, subject, body):
 
 
 def post_json(url, payload, headers=None, timeout=10):
+    parsed = urlsplit(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError("Notification URL must be an absolute HTTP(S) URL")
     request_headers = {"Content-Type": "application/json"}
     request_headers.update(headers or {})
     request = Request(

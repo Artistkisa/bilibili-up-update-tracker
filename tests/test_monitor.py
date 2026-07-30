@@ -1,6 +1,8 @@
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
 
@@ -39,6 +41,16 @@ class MonitorStateTests(unittest.TestCase):
             self.assertTrue(monitor.save_data(self.data, target))
             self.assertTrue(target.exists())
             self.assertFalse(target.with_suffix(".json.tmp").exists())
+
+    def test_new_up_user_is_recorded_as_baseline_not_update(self):
+        results = [{
+            "uid": 456, "name": "new-user", "success": True,
+            "video": {"bvid": "BV-first", "title": "first video"},
+        }]
+        with redirect_stdout(StringIO()):
+            updates = monitor.detect_updates(self.data, results)
+        self.assertEqual(updates, [])
+        self.assertEqual(self.data["upData"]["456"]["lastBvid"], "BV-first")
 
 
 if __name__ == "__main__":

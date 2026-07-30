@@ -61,6 +61,12 @@ class NotifierTests(unittest.TestCase):
         self.assertIn("network down", outcomes[0]["error"])
 
     @patch("notifiers.urlopen")
+    def test_post_json_rejects_non_http_scheme_before_opening(self, mocked_urlopen):
+        with self.assertRaisesRegex(ValueError, "HTTP"):
+            notifiers.post_json("file:///etc/passwd", {"test": True})
+        mocked_urlopen.assert_not_called()
+
+    @patch("notifiers.urlopen")
     def test_gotify_uses_token_priority_and_message_endpoint(self, mocked_urlopen):
         response = MagicMock()
         response.status = 200

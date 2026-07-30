@@ -13,6 +13,13 @@ from notifiers import send_notifications
 from settings import ConfigError, load_settings
 
 
+def configure_output_encoding():
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def empty_data():
     return {"lastCheck": None, "upData": {}, "updateCount": 0}
 
@@ -166,6 +173,7 @@ async def run(settings):
 
 
 def main(argv=None):
+    configure_output_encoding()
     try:
         settings = load_settings(argv)
     except ConfigError as exc:
