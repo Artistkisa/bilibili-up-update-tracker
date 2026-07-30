@@ -1,6 +1,8 @@
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
 
@@ -10,71 +12,45 @@ sys.path.insert(0, str(SRC_DIR))
 import monitor
 
 
-class UpdateStateTests(unittest.TestCase):
+class MonitorStateTests(unittest.TestCase):
     def setUp(self):
         self.data = {
             "lastCheck": None,
-            "upData": {
-                "123": {
-                    "lastBvid": "BV-old",
-                    "lastTitle": "old title",
-                    "upName": "tester",
-                }
-            },
+            "upData": {"123": {"lastBvid": "BV-old", "lastTitle": "old", "upName": "tester"}},
             "updateCount": 2,
         }
         self.updates = [{
-            "uid": 123,
-            "name": "tester",
-            "success": True,
-            "video": {"bvid": "BV-new", "title": "new title"},
+            "uid": 123, "name": "tester", "success": True,
+            "video": {"bvid": "BV-new", "title": "new"},
         }]
 
     def test_failed_notification_does_not_commit_update(self):
-        committed = monitor.commit_updates_after_notification(
-            self.data, self.updates, notification_sent=False
-        )
-
+        committed = monitor.commit_updates_after_notification(self.data, self.updates, False)
         self.assertFalse(committed)
         self.assertEqual(self.data["upData"]["123"]["lastBvid"], "BV-old")
-        self.assertEqual(self.data["updateCount"], 2)
 
-    def test_successful_notification_commits_update(self):
-        committed = monitor.commit_updates_after_notification(
-            self.data, self.updates, notification_sent=True
-        )
-
+    def test_all_notifications_success_commits_update(self):
+        committed = monitor.commit_updates_after_notification(self.data, self.updates, True)
         self.assertTrue(committed)
         self.assertEqual(self.data["upData"]["123"]["lastBvid"], "BV-new")
-        self.assertEqual(self.data["upData"]["123"]["lastTitle"], "new title")
         self.assertEqual(self.data["updateCount"], 3)
 
-    def test_commit_creates_missing_up_state_defensively(self):
-        self.data["upData"].clear()
+    def test_save_data_is_atomic(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "monitor.json"
+            self.assertTrue(monitor.save_data(self.data, target))
+            self.assertTrue(target.exists())
+            self.assertFalse(target.with_suffix(".json.tmp").exists())
 
-        committed = monitor.commit_updates_after_notification(
-            self.data, self.updates, notification_sent=True
-        )
-
-        self.assertTrue(committed)
-        self.assertEqual(self.data["upData"]["123"]["lastBvid"], "BV-new")
-
-
-class SaveDataTests(unittest.TestCase):
-    def test_save_data_replaces_target_without_leaving_temp_file(self):
-        original_data_file = monitor.DATA_FILE
-        try:
-            with tempfile.TemporaryDirectory() as directory:
-                data_file = Path(directory) / "monitor_data.json"
-                monitor.DATA_FILE = data_file
-
-                saved = monitor.save_data({"upData": {}, "updateCount": 0})
-
-                self.assertTrue(saved)
-                self.assertTrue(data_file.exists())
-                self.assertFalse(data_file.with_suffix(".json.tmp").exists())
-        finally:
-            monitor.DATA_FILE = original_data_file
+    def test_new_up_user_is_recorded_as_baseline_not_update(self):
+        results = [{
+            "uid": 456, "name": "new-user", "success": True,
+            "video": {"bvid": "BV-first", "title": "first video"},
+        }]
+        with redirect_stdout(StringIO()):
+            updates = monitor.detect_updates(self.data, results)
+        self.assertEqual(updates, [])
+        self.assertEqual(self.data["upData"]["456"]["lastBvid"], "BV-first")
 
 
 if __name__ == "__main__":

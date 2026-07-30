@@ -1,276 +1,166 @@
 # Bilibili UP Update Tracker
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+监控 B 站 UP 主最新投稿，并通过 Email、通用 Webhook 或 Gotify 发送通知。支持 YAML、环境变量、命令行、Docker Compose 和 GitHub Actions。
 
-> 🔔 追踪 B站 UP 主的视频更新，当有新视频发布时收到邮件通知
-
-[English](README.en.md) | 简体中文
-
-## ✨ 功能特性
-
-- 📊 **多 UP 更新追踪** - 同时追踪多个 UP 主的视频更新
-- ⚡ **异步获取** - 使用 asyncio 并发获取，速度快
-- 🔒 **防检测** - 基于 bilibili-api-python，自动处理签名和风控
-- 📧 **邮件提醒** - 当追踪的 UP 主发布新视频时收到邮件通知
-- 🐳 **易于部署** - 支持 Docker 和 cron 定时任务
-
-## 🚀 快速开始
-
-### 1. 环境要求
-
-- Python 3.8 或更高版本
-- pip 包管理器
-
-### 2. 安装
+## Docker Compose 快速开始
 
 ```bash
-# 克隆仓库
 git clone https://github.com/Artistkisa/bilibili-up-update-tracker.git
 cd bilibili-up-update-tracker
-
-# 安装依赖
-pip install -r requirements.txt
+cp .env.example .env
 ```
 
-**依赖说明：**
-- `bilibili-api-python` - B站 API 库
-- `aiohttp` - 异步 HTTP 客户端
+编辑 `.env`，至少设置 UP 主列表并完整配置一个通知渠道：
 
-### 3. 配置
+```dotenv
+TZ=Asia/Shanghai
+CHECK_CRON=0 10 * * *
+UP_USERS_JSON=[{"uid":68559,"name":"22和33"}]
+NOTIFY_CHANNELS=email
+EMAIL_SMTP_HOST=smtp.qq.com
+EMAIL_SMTP_PORT=587
+EMAIL_USER=your_email@qq.com
+EMAIL_PASS=邮箱授权码
+EMAIL_TO=recipient@example.com
+```
 
-所有配置都在 `src/config.py` 文件中：
+启动并查看日志：
 
-#### 2.1 添加要追踪的 UP 主
+```bash
+docker compose up -d --build
+docker compose logs -f
+```
 
-```python
-UP_LIST = {
-    # 格式：UID: "显示名字"
-    # 从 B站空间页面 URL 获取 UID：https://space.bilibili.com/{UID}
-    
-    68559: "22和33",              # 示例：B站官方账号
-    403748305: "BML制作指挥部",     # 示例：B站官方账号
-    
-    # 在这里添加你关注的 UP 主：
-    # 12345678: "UP主名字",
-    # 87654321: "另一个UP主",
+数据保存到 `./data`，cron 日志保存到 `./logs`，容器默认自动重启。
+
+## YAML 配置
+
+```bash
+cp config.example.yaml config.yaml
+python src/monitor.py
+```
+
+配置结构：
+
+```yaml
+up_users:
+  - uid: 68559
+    name: 22和33
+
+data_file: data/monitor_data.json
+
+schedule:
+  cron: "0 10 * * *"
+  timezone: Asia/Shanghai
+
+notifications:
+  email:
+    enabled: true
+    smtp_host: smtp.qq.com
+    smtp_port: 587
+    username: your_email@qq.com
+    password: 邮箱授权码
+    recipients: [recipient@example.com]
+
+  webhook:
+    enabled: false
+    url: https://example.com/webhook
+    headers:
+      Authorization: Bearer token
+    timeout: 10
+
+  gotify:
+    enabled: false
+    url: https://gotify.example.com
+    token: application-token
+    priority: 5
+    timeout: 10
+```
+
+真正的 `config.yaml` 和 `.env` 已加入 `.gitignore`。不要把密码或 Token 写入示例文件或提交到 Git。
+
+## 配置优先级与命令行
+
+优先级为：
+
+```text
+命令行参数 > 环境变量 > config.yaml > 旧版 src/config.py > 内置默认值
+```
+
+命令行参数：
+
+```bash
+python src/monitor.py --config /path/config.yaml
+python src/monitor.py --data-file /path/state.json
+python src/monitor.py --up 68559:22和33 --up 403748305:BML制作指挥部
+python src/monitor.py --notify webhook --notify gotify
+```
+
+敏感配置不提供命令行参数，避免进入 shell 历史。旧版 `src/config.py` 仅在没有新配置来源时兼容读取，并会显示弃用警告；计划在 v1.2 删除。
+
+## 环境变量
+
+| 分类 | 变量 |
+| --- | --- |
+| 基础 | `CONFIG_FILE`、`DATA_FILE`、`UP_USERS_JSON` |
+| Docker 调度 | `CHECK_CRON`、`TZ` |
+| 通知选择 | `NOTIFY_CHANNELS=email,webhook,gotify` |
+| Email | `EMAIL_SMTP_HOST`、`EMAIL_SMTP_PORT`、`EMAIL_USER`、`EMAIL_PASS`、`EMAIL_TO` |
+| Webhook | `WEBHOOK_URL`、`WEBHOOK_HEADERS_JSON`、`WEBHOOK_TIMEOUT` |
+| Gotify | `GOTIFY_URL`、`GOTIFY_TOKEN`、`GOTIFY_PRIORITY`、`GOTIFY_TIMEOUT` |
+
+`UP_USERS_JSON` 示例：
+
+```json
+[{"uid":68559,"name":"22和33"}]
+```
+
+## 通知行为
+
+通用 Webhook 发送 `POST application/json`：
+
+```json
+{
+  "event": "bilibili.video.updated",
+  "checked_at": "2026-07-30T20:00:00+08:00",
+  "updates": [
+    {
+      "uid": 68559,
+      "up_name": "22和33",
+      "bvid": "BV...",
+      "title": "视频标题",
+      "url": "https://www.bilibili.com/video/BV...",
+      "published_at": "2026-07-30T19:00:00+08:00"
+    }
+  ]
 }
 ```
 
-**如何获取 UID：**
-1. 打开 UP 主的 B站空间页面
-2. 查看 URL：`https://space.bilibili.com/12345678`
-3. 数字 `12345678` 就是 UID
+同时启用多个渠道时，只有全部渠道成功才会确认更新。任一渠道失败，视频状态保持不变，并在下次检查时重试全部渠道。
 
-**添加/删除 UP 主：**
-- **添加**：在 `UP_LIST` 中添加一行 `UID: "名字",`
-- **删除**：删除对应的那一行
-- **修改**：直接修改名字
+## GitHub Actions
 
-#### 2.2 配置邮件通知
+在仓库 Secrets 中配置：
 
-```python
-EMAIL_CONFIG = {
-    "smtp_host": "smtp.qq.com",       # SMTP 服务器地址
-    "smtp_port": 587,                 # SMTP 端口（587 是 TLS 端口）
-    "smtp_user": "your_email@qq.com", # 你的邮箱地址
-    "smtp_pass": "your_auth_code",    # 邮箱授权码（不是登录密码！）
-    "to": ["recipient@example.com"]   # 接收通知的邮箱（可填多个）
-}
-```
+- `UP_USERS_JSON`
+- Email：`EMAIL_SMTP_HOST`、`EMAIL_SMTP_PORT`、`EMAIL_USER`、`EMAIL_PASS`、`EMAIL_TO`
+- Webhook：`WEBHOOK_URL`、`WEBHOOK_HEADERS_JSON`
+- Gotify：`GOTIFY_URL`、`GOTIFY_TOKEN`
 
-**常用邮箱 SMTP 设置：**
+在 Variables 中配置 `NOTIFY_CHANNELS`，例如 `email,gotify`。可选配置 `GOTIFY_PRIORITY`。
 
-| 邮箱服务商 | SMTP 服务器 | 端口 | 授权码获取文档 |
-|------------|-------------|------|----------------|
-| QQ 邮箱 | smtp.qq.com | 587 | [官方文档](https://service.mail.qq.com/cgi-bin/help?subtype=1&id=28&no=1001256) |
-| Gmail | smtp.gmail.com | 587 | [Google 支持](https://support.google.com/accounts/answer/185833) |
-| 163 邮箱 | smtp.163.com | 25/465 | [官方帮助](https://help.mail.163.com/index.do) |
-| Outlook | smtp.office365.com | 587 | [Microsoft 支持](https://support.microsoft.com/zh-cn/office/outlook-com-%E7%9A%84-pop-imap-%E5%92%8C-smtp-%E8%AE%BE%E7%BD%AE-d088b986-291d-42b8-9564-9c414e2aa040) |
+GitHub Actions 的计划任务使用 UTC，不能由运行时 `CHECK_CRON` 动态修改。要调整 Actions 执行时间，请编辑 `.github/workflows/monitor.yml` 中的 `schedule.cron`。
 
-**配置多个接收邮箱：**
-```python
-"to": ["email1@qq.com", "email2@gmail.com", "email3@163.com"]
-```
-
-### 4. 运行
+## 本机安装与测试
 
 ```bash
-cd src
-python monitor.py
+python -m pip install -r requirements.txt
+python src/monitor.py
+python -m unittest discover -s tests -v
 ```
 
-**注意：**
-- 首次运行会自动安装缺失的依赖（需要网络连接）
-- 首次运行只记录当前状态，不发送邮件
-- 后续运行会检查更新，有新视频时发送邮件通知
+要求 Python 3.11 或更高版本。
 
-**支持的平台：**
-- ✅ Linux - 完整支持（直接运行 + cron 定时）
-- ✅ macOS - 完整支持（直接运行 + cron 定时）  
-- ✅ Windows - 支持直接运行（定时任务需自行配置）
-- ✅[OpenClaw](https://github.com/openclaw/openclaw) 是一个 AI 自动化平台，可以托管运行此脚本，无需维护服务器。
+## License
 
-## 📧 邮件通知示例
-
-当检测到新视频时，你会收到这样的邮件：
-
-```
-📺 B站 UP 主更新汇总
-===================================
-
-📅 检查时间：2026-02-17 22:18:00
-📊 本次更新：2 个
-👥 监控 UP 主：17 个
-
-===================================
-🎉 新视频列表
-===================================
-
-1. 【22和33】
-   📹 人生列车Life Train【2026拜年纪单品】
-   🔗 https://www.bilibili.com/video/BV1xxxxx
-   🕐 发布时间：2026-01-28 20:00
-   ⏱️ 时长：04:32
-   👁️ 播放量：125万
-
-2. 【黄霄雲】
-   📹 【孙楠×黄霄雲】2026辽宁春晚《万家灯火共团圆》
-   🔗 https://www.bilibili.com/video/BV1yyyyy
-   🕐 发布时间：2026-01-27 19:30
-   ⏱️ 时长：03:45
-   👁️ 播放量：89万
-
-===================================
-📋 监控的 UP 主列表
-===================================
-
-✅ 22和33
-✅ BML制作指挥部
-✅ 黄霄雲
-✅ ... (其他 UP 主)
-
-===================================
-
-💡 提示：
-- 每天 10:00 自动检查一次
-- 有更新时发送汇总邮件
-- 点击链接可直接观看视频
-```
-
-## 📁 项目结构
-
-```
-bilibili-up-update-tracker/
-├── src/
-│   ├── monitor.py          # 主监控脚本
-│   └── config.py           # 配置文件（UP主列表 + 邮箱）
-├── data/                   # 数据存储（自动创建）
-├── logs/                   # 日志（自动创建）
-├── requirements.txt        # Python 依赖
-├── Dockerfile              # Docker 配置
-├── LICENSE                 # MIT 协议
-└── README.md               # 本文件
-```
-
-## 🐳 Docker 部署
-
-```bash
-# 构建镜像
-docker build -t bilibili-up-update-tracker .
-
-# 运行
-docker run -d \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/src/config.py:/app/src/config.py \
-  --name bilibili-tracker \
-  bilibili-up-update-tracker
-```
-
-## ⏰ 设置定时检查（Cron）
-
-为了让脚本每天自动运行，需要使用 Linux/Mac 的 cron 定时任务：
-
-```bash
-# 1. 编辑 crontab
-crontab -e
-
-# 2. 添加以下行（每天上午 10:00 运行）
-0 10 * * * cd /path/to/bilibili-up-update-tracker/src && python monitor.py >> ../logs/cron.log 2>&1
-```
-
-**常用定时设置：**
-
-| 频率 | Cron 表达式 | 说明 |
-|------|-------------|------|
-| 每天 10:00 | `0 10 * * *` | 每天上午 10 点 |
-| 每天 2 次 | `0 10,22 * * *` | 上午 10 点和晚上 10 点 |
-| 每 6 小时 | `0 */6 * * *` | 每天 4 次 |
-| 每小时 | `0 * * * *` | 每小时整点 |
-
-**Cron 表达式格式：**
-```
-* * * * *
-│ │ │ │ │
-│ │ │ │ └── 星期 (0-7, 0和7都是周日)
-│ │ │ └──── 月份 (1-12)
-│ │ └────── 日期 (1-31)
-│ └──────── 小时 (0-23)
-└────────── 分钟 (0-59)
-```
-
-**检查定时任务是否设置成功：**
-
-```bash
-# 查看当前用户的 cron 任务
-crontab -l
-
-# 查看 cron 日志（Ubuntu/Debian）
-grep CRON /var/log/syslog
-```
-
-## ❓ 常见问题
-
-### Q: 如何添加新的 UP 主？
-
-A: 编辑 `src/config.py`，在 `UP_LIST` 中添加：
-```python
-UP_LIST = {
-    # 原有 UP 主...
-    12345678: "新UP主名字",  # 添加这一行
-}
-```
-
-### Q: 邮件发送失败怎么办？
-
-A: 检查以下几点：
-1. SMTP 服务器地址和端口是否正确
-2. 使用的是「授权码」而不是邮箱密码（参考上方文档链接）
-3. 邮箱是否开启了 SMTP 服务
-4. 网络是否能连接到 SMTP 服务器
-
-### Q: 如何修改检查频率？
-
-A: 修改 cron 设置（参考上方「设置定时检查」部分）：
-
-```bash
-# 编辑 crontab
-crontab -e
-
-# 每 6 小时检查一次
-0 */6 * * * cd /path/to/bilibili-up-update-tracker/src && python monitor.py >> ../logs/cron.log 2>&1
-
-# 或者每小时检查一次
-0 * * * * cd /path/to/bilibili-up-update-tracker/src && python monitor.py >> ../logs/cron.log 2>&1
-```
-
-### Q: 如何清空历史重新追踪？
-
-A: 删除数据文件：
-```bash
-rm data/monitor_data.json
-```
-
-## 📄 开源协议
-
-MIT License
+[MIT](LICENSE)
