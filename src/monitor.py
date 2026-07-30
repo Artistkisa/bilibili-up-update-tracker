@@ -16,7 +16,7 @@ from email.header import Header
 
 # 导入配置
 try:
-    from config import UP_LIST, EMAIL_CONFIG, DATA_FILE, PROXY
+    from config import UP_LIST, EMAIL_CONFIG, DATA_FILE
 except ImportError:
     print("错误：无法导入配置，请检查 src/config.py 是否存在")
     sys.exit(1)
@@ -51,9 +51,32 @@ def save_data(data):
     data_path = Path(DATA_FILE)
     try:
         data_path.parent.mkdir(parents=True, exist_ok=True)
-        data_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
+        temp_path = data_path.with_suffix(data_path.suffix + '.tmp')
+        temp_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
+        temp_path.replace(data_path)
+        return True
     except Exception as e:
         print(f"保存数据文件失败: {e}", file=sys.stderr)
+        return False
+
+
+def apply_updates(data, updates):
+    """在通知成功后提交视频状态，避免发送失败造成永久漏报。"""
+    for result in updates:
+        uid_str = str(result['uid'])
+        video = result['video']
+        up_data = data['upData'][uid_str]
+        up_data['lastBvid'] = video['bvid']
+        up_data['lastTitle'] = video['title']
+        data['updateCount'] += 1
+
+
+def commit_updates_after_notification(data, updates, notification_sent):
+    """仅在通知发送成功时确认更新。"""
+    if not notification_sent:
+        return False
+    apply_updates(data, updates)
+    return True
 
 
 async def fetch_up_video(uid, name):
@@ -218,34 +241,36 @@ async def main():
         elif video['bvid'] != up_data['lastBvid']:
             print(f"🎉 [{name}] 有新视频: {video['title'][:40]}...")
             updates.append(result)
-            up_data['lastBvid'] = video['bvid']
-            up_data['lastTitle'] = video['title']
-            data['updateCount'] += 1
         else:
             print(f"✅ [{name}] 无更新")
-    
-    # 保存数据
-    data['lastCheck'] = datetime.now().isoformat()
-    save_data(data)
+
+    notification_sent = False
     
     # 发送邮件（有更新且不是首次运行）
     if updates and not first_run:
         print(f"\n📧 发送邮件通知（{len(updates)} 个更新）...")
         subject = f"🎬 B站 UP 主更新汇总（{len(updates)}个更新）"
         body = format_email(updates, results)
-        if send_email(subject, body):
+        notification_sent = send_email(subject, body)
+        if notification_sent:
             print("✅ 邮件发送成功")
+            commit_updates_after_notification(data, updates, notification_sent)
         else:
-            print("❌ 邮件发送失败")
+            print("❌ 邮件发送失败，本次更新将在下次检查时重试")
     elif first_run:
         print("\n📝 首次运行，已记录当前状态，不发送邮件")
     else:
         print("\n✅ 无更新，不发送邮件")
+
+    # 邮件成功后才保存新视频状态；首次运行和无更新时正常保存检查状态。
+    data['lastCheck'] = datetime.now().isoformat()
+    save_data(data)
     
     # 构建输出
     result = {
         "hasUpdate": len(updates) > 0,
         "shouldAlert": len(updates) > 0 and not first_run,
+        "notificationSent": notification_sent,
         "updateCount": len(updates),
         "totalUp": len(UP_LIST),
         "updates": updates,

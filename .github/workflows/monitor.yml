@@ -22,7 +22,18 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
+
+    - name: Restore monitor state
+      uses: actions/cache@v4
+      with:
+        path: data
+        key: monitor-data-${{ github.run_id }}
+        restore-keys: |
+          monitor-data-
         
+    - name: Run tests
+      run: python -m unittest discover -s tests -v
+
     - name: Run monitor
       env:
         EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST }}
@@ -30,6 +41,7 @@ jobs:
         EMAIL_USER: ${{ secrets.EMAIL_USER }}
         EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
         EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        DATA_FILE: ${{ github.workspace }}/data/monitor_data.json
       run: |
         cd src
         python monitor.py
