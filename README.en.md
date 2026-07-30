@@ -1,10 +1,16 @@
 # Bilibili UP Update Tracker
 
+[![Monitor](https://github.com/Artistkisa/bilibili-up-update-tracker/actions/workflows/monitor.yml/badge.svg)](https://github.com/Artistkisa/bilibili-up-update-tracker/actions/workflows/monitor.yml)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/Docker-supported-2496ED?logo=docker&logoColor=white)](Dockerfile)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/Artistkisa/bilibili-up-update-tracker?style=social)](https://github.com/Artistkisa/bilibili-up-update-tracker/stargazers)
+
 > Automatically track new Bilibili uploads and notify through Email, Webhook, or Gotify.
 
 Configure it once and let it check multiple UP creators on a schedule. New uploads produce a summary containing the title, URL, publish time, duration, and play count.
 
-[中文](README.md) · [YAML example](config.example.yaml) · [Environment example](.env.example)
+[中文](README.md) · [YAML example](config.example.yaml) · [Environment example](.env.example) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
 ## Highlights
 
