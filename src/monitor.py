@@ -49,14 +49,18 @@ def load_data():
 def save_data(data):
     """保存数据"""
     data_path = Path(DATA_FILE)
+    temp_path = data_path.with_suffix(data_path.suffix + '.tmp')
     try:
         data_path.parent.mkdir(parents=True, exist_ok=True)
-        temp_path = data_path.with_suffix(data_path.suffix + '.tmp')
         temp_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
         temp_path.replace(data_path)
         return True
     except Exception as e:
         print(f"保存数据文件失败: {e}", file=sys.stderr)
+        try:
+            temp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
         return False
 
 
@@ -65,7 +69,11 @@ def apply_updates(data, updates):
     for result in updates:
         uid_str = str(result['uid'])
         video = result['video']
-        up_data = data['upData'][uid_str]
+        up_data = data['upData'].setdefault(uid_str, {
+            'lastBvid': None,
+            'lastTitle': None,
+            'upName': result['name'],
+        })
         up_data['lastBvid'] = video['bvid']
         up_data['lastTitle'] = video['title']
         data['updateCount'] += 1
@@ -264,13 +272,14 @@ async def main():
 
     # 邮件成功后才保存新视频状态；首次运行和无更新时正常保存检查状态。
     data['lastCheck'] = datetime.now().isoformat()
-    save_data(data)
+    data_saved = save_data(data)
     
     # 构建输出
     result = {
         "hasUpdate": len(updates) > 0,
         "shouldAlert": len(updates) > 0 and not first_run,
         "notificationSent": notification_sent,
+        "dataSaved": data_saved,
         "updateCount": len(updates),
         "totalUp": len(UP_LIST),
         "updates": updates,
@@ -283,6 +292,9 @@ async def main():
     
     if not result['shouldAlert']:
         print("\nHEARTBEAT_OK")
+
+    if not data_saved:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

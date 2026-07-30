@@ -11,6 +11,12 @@ sys.path.insert(0, str(SRC_DIR))
 
 
 class ConfigTests(unittest.TestCase):
+    def tearDown(self):
+        # Keep the shared config module deterministic for later tests.
+        with patch.dict(os.environ, {}, clear=True):
+            import config
+            importlib.reload(config)
+
     def test_email_config_reads_actions_environment(self):
         env = {
             "EMAIL_SMTP_HOST": "smtp.example.com",
