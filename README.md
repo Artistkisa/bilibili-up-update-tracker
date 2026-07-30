@@ -1,10 +1,16 @@
 # Bilibili UP Update Tracker
 
+[![Monitor](https://github.com/Artistkisa/bilibili-up-update-tracker/actions/workflows/monitor.yml/badge.svg)](https://github.com/Artistkisa/bilibili-up-update-tracker/actions/workflows/monitor.yml)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/Docker-supported-2496ED?logo=docker&logoColor=white)](Dockerfile)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/Artistkisa/bilibili-up-update-tracker?style=social)](https://github.com/Artistkisa/bilibili-up-update-tracker/stargazers)
+
 > 自动追踪 B 站 UP 主的新投稿，并通过 Email、Webhook 或 Gotify 通知你。
 
 无需一直打开 B 站，也不用手动刷新动态。配置一次后，程序会按计划检查多个 UP 主；发现新视频时发送包含标题、链接、发布时间、时长和播放量的汇总通知。
 
-[English](README.en.md) · [配置示例](config.example.yaml) · [环境变量示例](.env.example)
+[English](README.en.md) · [配置示例](config.example.yaml) · [环境变量示例](.env.example) · [更新日志](CHANGELOG.md) · [参与贡献](CONTRIBUTING.md)
 
 ## 为什么用它？
 
