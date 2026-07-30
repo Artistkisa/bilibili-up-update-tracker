@@ -1,0 +1,32 @@
+up_users:
+  - uid: 68559
+    name: 22和33
+
+data_file: data/monitor_data.json
+
+schedule:
+  cron: "0 10 * * *"
+  timezone: Asia/Shanghai
+
+notifications:
+  email:
+    enabled: true
+    smtp_host: smtp.qq.com
+    smtp_port: 587
+    username: your_email@qq.com
+    password: replace_with_authorization_code
+    recipients:
+      - recipient@example.com
+
+  webhook:
+    enabled: false
+    url: ""
+    headers: {}
+    timeout: 10
+
+  gotify:
+    enabled: false
+    url: ""
+    token: ""
+    priority: 5
+    timeout: 10

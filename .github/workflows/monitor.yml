@@ -36,11 +36,18 @@ jobs:
 
     - name: Run monitor
       env:
+        UP_USERS_JSON: ${{ secrets.UP_USERS_JSON }}
+        NOTIFY_CHANNELS: ${{ vars.NOTIFY_CHANNELS || 'email' }}
         EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST }}
         EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
         EMAIL_USER: ${{ secrets.EMAIL_USER }}
         EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
         EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        WEBHOOK_HEADERS_JSON: ${{ secrets.WEBHOOK_HEADERS_JSON }}
+        GOTIFY_URL: ${{ secrets.GOTIFY_URL }}
+        GOTIFY_TOKEN: ${{ secrets.GOTIFY_TOKEN }}
+        GOTIFY_PRIORITY: ${{ vars.GOTIFY_PRIORITY }}
         DATA_FILE: ${{ github.workspace }}/data/monitor_data.json
       run: |
         cd src

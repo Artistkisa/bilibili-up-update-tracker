@@ -1,0 +1,13 @@
+services:
+  tracker:
+    build: .
+    env_file:
+      - .env
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      CHECK_CRON: "${CHECK_CRON:-0 10 * * *}"
+      DATA_FILE: /app/data/monitor_data.json
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
