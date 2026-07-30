@@ -18,6 +18,60 @@
 - 💾 状态持久化，首次运行只建立基线，不发送旧视频
 - 🔁 多渠道全部成功后才确认更新，失败会在下次检查时重试
 
+## 通知效果
+
+### 📧 Email
+
+检测到新视频后，你会收到一封汇总邮件。一次检查发现多个 UP 主更新时，会合并到同一封邮件中：
+
+```text
+📺 B站 UP 主更新汇总
+===================================
+
+📅 检查时间：2026-02-17 22:18:00 CST
+📊 本次更新：2 个
+👥 监控 UP 主：5 个
+
+1. 【22和33】
+   📹 人生列车 Life Train【2026拜年纪单品】
+   🔗 https://www.bilibili.com/video/BV1xxxxx
+   🕐 发布时间：2026-01-28 20:00
+   ⏱️ 时长：04:32
+   👁️ 播放量：125万
+
+2. 【黄霄雲】
+   📹 【孙楠×黄霄雲】2026辽宁春晚《万家灯火共团圆》
+   🔗 https://www.bilibili.com/video/BV1yyyyy
+   🕐 发布时间：2026-01-27 19:30
+   ⏱️ 时长：03:45
+   👁️ 播放量：89万
+```
+
+### 🔗 Webhook
+
+Webhook 会收到结构化 JSON，可用于接入飞书、企业微信、Node-RED、n8n、Home Assistant 或自己的服务：
+
+```json
+{
+  "event": "bilibili.video.updated",
+  "checked_at": "2026-02-17T22:18:00+08:00",
+  "updates": [
+    {
+      "uid": 68559,
+      "up_name": "22和33",
+      "bvid": "BV1xxxxx",
+      "title": "人生列车 Life Train【2026拜年纪单品】",
+      "url": "https://www.bilibili.com/video/BV1xxxxx",
+      "published_at": "2026-01-28T20:00:00+08:00"
+    }
+  ]
+}
+```
+
+### 📱 Gotify
+
+Gotify 会在手机或桌面客户端显示通知标题和视频汇总，点击消息中的链接即可前往 B 站观看。
+
 ## 选择部署方式
 
 | 方式 | 适合谁 | 自动定时 | 状态持久化 |
@@ -253,24 +307,7 @@ WEBHOOK_URL=https://example.com/bilibili-hook
 WEBHOOK_HEADERS_JSON={"Authorization":"Bearer your-token"}
 ```
 
-核心载荷：
-
-```json
-{
-  "event": "bilibili.video.updated",
-  "checked_at": "2026-07-30T20:00:00+08:00",
-  "updates": [
-    {
-      "uid": 68559,
-      "up_name": "22和33",
-      "bvid": "BV...",
-      "title": "视频标题",
-      "url": "https://www.bilibili.com/video/BV...",
-      "published_at": "2026-07-30T19:00:00+08:00"
-    }
-  ]
-}
-```
+核心载荷与上方“通知效果”中的 Webhook 示例一致。
 
 ### Gotify
 

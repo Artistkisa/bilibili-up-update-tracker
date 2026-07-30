@@ -18,6 +18,60 @@ Configure it once and let it check multiple UP creators on a schedule. New uploa
 - Persistent state with no historical notifications on first run
 - Updates are committed only after every enabled channel succeeds
 
+## Notification preview
+
+### Email
+
+Several uploads found during one check are combined into a single message:
+
+```text
+📺 Bilibili UP update summary
+===================================
+
+📅 Checked at: 2026-02-17 22:18:00 CST
+📊 New uploads: 2
+👥 Monitored creators: 5
+
+1. 【22 and 33】
+   📹 Life Train — 2026 New Year Gala
+   🔗 https://www.bilibili.com/video/BV1xxxxx
+   🕐 Published: 2026-01-28 20:00
+   ⏱️ Duration: 04:32
+   👁️ Plays: 1.25M
+
+2. 【Huang Xiaoyun】
+   📹 2026 Liaoning Spring Festival Gala performance
+   🔗 https://www.bilibili.com/video/BV1yyyyy
+   🕐 Published: 2026-01-27 19:30
+   ⏱️ Duration: 03:45
+   👁️ Plays: 890K
+```
+
+### Webhook
+
+The Webhook receives structured JSON suitable for n8n, Node-RED, Home Assistant, chat bots, or custom services:
+
+```json
+{
+  "event": "bilibili.video.updated",
+  "checked_at": "2026-02-17T22:18:00+08:00",
+  "updates": [
+    {
+      "uid": 68559,
+      "up_name": "22 and 33",
+      "bvid": "BV1xxxxx",
+      "title": "Life Train — 2026 New Year Gala",
+      "url": "https://www.bilibili.com/video/BV1xxxxx",
+      "published_at": "2026-01-28T20:00:00+08:00"
+    }
+  ]
+}
+```
+
+### Gotify
+
+Gotify displays the notification title and upload summary in its mobile or desktop client, including direct Bilibili links.
+
 ## Choose a deployment method
 
 | Method | Best for | Scheduling | Persistence |
